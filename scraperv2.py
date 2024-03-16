@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup
+from idol_scraper import BeautifulSoup
 from time import sleep
 import csv
 from selenium import webdriver
@@ -17,16 +17,12 @@ def scrape(url):
     driver = webdriver.Chrome(options=options)
     driver.get(url)
 
-    # dropdown_button = driver.find_element_by_class_name("btn dropdown-toggle btn-default").click()
-    try:
-        # dropdown_button = driver.find_element(By.CLASS_NAME, "paginate_button next")
+    for i in range(3):
         dropdown_button = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[1]/div[1]/div/div[1]/main/article/div[2]/div[2]/div/div[7]/a[3]')))
-        print("element exists")
-        print(dropdown_button)
         dropdown_button.click()
+        print("clicked button")
+
         driver.implicitly_wait(20)
-    except:
-        print("bruh")
 
 
 def main():
