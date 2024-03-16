@@ -1,0 +1,7 @@
+beautifulsoup4
+Flask
+flask-restful
+python-dotenv
+psycopg2-binary
+pandas
+SQLAlchemy
