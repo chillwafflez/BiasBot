@@ -1,4 +1,6 @@
 beautifulsoup4
+selenium
+discord
 Flask
 flask-restful
 python-dotenv
