@@ -40,7 +40,7 @@ def scrape(link, save_path):
             writer = csv.writer(f)
             writer.writerow([stage_name, full_name, korean_name, group, country])
 
-def scrape_image(input_path, output_path):
+def scrape_images(input_path, output_path):
     options = webdriver.ChromeOptions()
     options.add_argument("--ignore-certificate-error")
     options.add_argument("--ignore-ssl-errors")
@@ -93,7 +93,40 @@ def scrape_image(input_path, output_path):
     # needed_image.click()
     # img_src = needed_image.get_attribute('src')
     # print(img_src)
-      
+
+def scrape_idol_image(idol_name, group):
+    try:
+        options = webdriver.ChromeOptions()
+        options.add_argument("--ignore-certificate-error")
+        options.add_argument("--ignore-ssl-errors")
+        options.add_argument("--headless=new")
+        options.add_experimental_option("detach", True)
+        driver = webdriver.Chrome(options=options)
+        
+        if group == "":
+            search_term = idol_name + " K-Pop"
+        else:
+            search_term = idol_name + " " + group
+            search_term = search_term.strip()
+
+        # Encode the search term to URL-friendly format
+        encoded_term = urllib.parse.quote_plus(search_term) 
+        search_url = f"https://www.google.com/search?q={encoded_term}&tbm=isch"
+        driver.get(search_url)
+
+        thumbnails = driver.find_elements(By.CLASS_NAME, "Q4LuWd")
+        first_image = thumbnails[0]
+        first_image.click()
+        time.sleep(3)
+                                                     
+        needed_image = driver.find_element(By.XPATH, "/html/body/div[2]/c-wiz/div[3]/div[2]/div[3]/div[2]/div[2]/div[2]/div[2]/c-wiz/div/div/div/div/div[3]/div[1]/a/img[1]")
+        time.sleep(3)
+        img_src = needed_image.get_attribute('src')
+
+        driver.close()
+        return img_src
+    except:
+        return "Unable to return picture"
 
 
 def main():
@@ -103,6 +136,7 @@ def main():
     # scrape_image()
 
     male_idol_csv = "data\male_idols.csv"
-    scrape_image(male_idol_csv, "penis")
+    # scrape_images(male_idol_csv, "penis")
+    print(scrape_idol_image("Jimin", "BTS"))
 
 main()
