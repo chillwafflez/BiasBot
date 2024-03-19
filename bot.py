@@ -20,7 +20,8 @@ async def mi(ctx):
     stage_name = ""
     korean_name = ""
     group = ""
-    with open("data\male_idols.csv", 'r', encoding="utf-8") as f:
+    # with open("data\male_idols.csv", 'r', encoding="utf-8") as f:
+    with open("data\male_idols_with_pics.csv", 'r', encoding="utf-8") as f:
         reader = csv.reader(f, delimiter=',')
         next(reader)
 
@@ -28,16 +29,17 @@ async def mi(ctx):
         stage_name =  chosen_row[0]
         korean_name = chosen_row[2]
         group = chosen_row[3]
+        idol_picture_url = chosen_row[5]
     
     embed = discord.Embed(
         color=discord.Color.pink(),
         description=group,
         title=f"{stage_name} ({korean_name})"
     )
-    print(f"Fetching picture for {stage_name} from {group}")
-    idol_picture = scrape_idol_image(stage_name, group)
-    embed.set_image(url=idol_picture)
-    # embed.set_image(url="https://www.allkpop.com/upload/2023/04/content/191153/web_data/allkpop_1681919771_untitled-1.jpg")
+    # print(f"Fetching picture for {stage_name} from {group}")
+    # idol_picture_url = scrape_idol_image(stage_name, group)
+    # print(f"url: {idol_picture_url}")
+    embed.set_image(url=idol_picture_url) 
 
     await ctx.send(embed=embed)
 
@@ -61,32 +63,12 @@ async def fi(ctx):
         title=f"{stage_name} ({korean_name})"
     )
     print(f"Fetching picture for {stage_name} from {group}")
-    idol_picture = scrape_idol_image(stage_name, group)
-    embed.set_image(url=idol_picture) 
+    idol_picture_url = scrape_idol_image(stage_name, group)
+    print(f"url: {idol_picture_url}")
+    embed.set_image(url=idol_picture_url) 
+    # embed.set_image(url='https://static.wikia.nocookie.net/kep1er/images/3/38/Youngeun_Magic_Hour_%28Sunkissed_Ver%29_Concept_Photo_1.jpeg/revision/latest?cb=20230916010214')
 
     await ctx.send(embed=embed)
 
 
-# @bot.command()
-# async def help(ctx):
-#     msg = "Type $mi to roll for male idols\nType $fi to roll female idols\nType $bi to roll for both"
-#     embed = discord.Embed(
-#         color=discord.Color.pink(),
-#         description=msg,
-#         title="Help"
-#     )
-#     await ctx.send(embed=embed)
-
-# client = discord.Client(intents=discord.Intents.default())
-
-# @client.event
-# async def on_ready():
-#     print(f'{client.user} has connected to Discord!')
-
-# @client.event
-# async def on_message(message):
-#     if message.content.startswith('////'):
-#         await message.channel.send("COCK")
-
-# client.run(TOKEN)
 bot.run(TOKEN)
