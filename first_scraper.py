@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup
+from idol_scraper import BeautifulSoup
 from time import sleep
 import csv
 import random
