@@ -84,12 +84,12 @@ def scrape_images_to_csv(input_path, output_path):
                 elif img_src.startswith('http'):
                     break
 
-            # if counter == 30:
+            # if counter == 3:
             #     break
             # counter += 1
             df.loc[i, 'First_Picture_URL'] = img_src.strip()
         except:
-            # if counter == 30:
+            # if counter == 3:
             #     break
             # counter += 1
             df.loc[i, 'First_Picture_URL'] = ""
@@ -148,9 +148,11 @@ def scrape_idol_image(idol_name, group):
 
 
 def main():
-    male_idol_csv = "data\male_idols.csv"
-    output_path = "data\male_idols_with_pics.csv"
+    # male_idol_csv = "data\male_idols.csv"
+    # output_path = "data\male_idols_with_pics.csv"
+    female_idol_csv = "data\\female_idols.csv"
+    output_path = "data\\female_idols_with_pics.csv"
     # print(scrape_idol_image("Euijeong", "KELT9b"))
-#     scrape_images_to_csv(male_idol_csv, output_path)
+    scrape_images_to_csv(female_idol_csv, output_path)
 
 # main()
