@@ -52,8 +52,7 @@ async def fi(ctx):
     stage_name = ""
     korean_name = ""
     group = ""
-    # with open("data\\female_idols.csv", 'r', encoding="utf-8") as f:
-    with open("data\\female_idols_with_pics.csv", 'r', encoding="utf-8") as f:
+    with open("data\\female_idol_filenames.csv", 'r', encoding="utf-8") as f:
         reader = csv.reader(f, delimiter=',')
         next(reader)
 
@@ -61,7 +60,7 @@ async def fi(ctx):
         stage_name =  chosen_row[0]
         korean_name = chosen_row[2]
         group = chosen_row[3]
-        idol_picture_url = chosen_row[5]
+        idol_picture_url = "https://bias-bot-images.s3.us-west-1.amazonaws.com/" + chosen_row[5]
     
     embed = discord.Embed(
         color=discord.Color.pink(),
