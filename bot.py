@@ -14,14 +14,14 @@ intents = discord.Intents.all()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix='$', intents=intents)
+emojis = ["♥️", "💓", "💗", "🩷", "💜", "💘", "💖"]
 
 @bot.command()
 async def mi(ctx):
     stage_name = ""
     korean_name = ""
     group = ""
-    # with open("data\male_idols.csv", 'r', encoding="utf-8") as f:
-    with open("data\male_idols_with_pics.csv", 'r', encoding="utf-8") as f:
+    with open("data\male_idol_filenames.csv", 'r', encoding="utf-8") as f:
         reader = csv.reader(f, delimiter=',')
         next(reader)
 
@@ -29,7 +29,7 @@ async def mi(ctx):
         stage_name =  chosen_row[0]
         korean_name = chosen_row[2]
         group = chosen_row[3]
-        idol_picture_url = chosen_row[5]
+        idol_picture_url = "https://bias-bot-images.s3.us-west-1.amazonaws.com/" + chosen_row[5]
     
     embed = discord.Embed(
         color=discord.Color.pink(),
@@ -41,9 +41,6 @@ async def mi(ctx):
     # print(f"url: {idol_picture_url}")
     embed.set_image(url=idol_picture_url) 
     msg = await ctx.send(embed=embed)
-
-    # Add emoji
-    emojis = ["♥️", "💓", "💗", "🩷", "💜", "💘", "💖"]
     await msg.add_reaction(random.choice(emojis))
 
 
@@ -72,9 +69,6 @@ async def fi(ctx):
     # print(f"url: {idol_picture_url}")
     embed.set_image(url=idol_picture_url) 
     msg = await ctx.send(embed=embed)
-
-    # Add emoji
-    emojis = ["♥️", "💓", "💗", "🩷", "💜", "💘", "💖"]
     await msg.add_reaction(random.choice(emojis))
 
 @bot.command()

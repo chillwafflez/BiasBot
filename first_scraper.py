@@ -120,4 +120,4 @@ def main():
             line_tracker += 1
             sleep(random.randint(5,10))
 
-main()
+# main()

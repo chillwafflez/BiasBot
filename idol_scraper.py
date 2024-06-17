@@ -162,10 +162,10 @@ def upload_to_s3(input_csv, output_csv):
     df = pd.read_csv(input_csv)
     df = df.fillna('')
     for i in df.index:
-        if i < 700:
+        if i < 800:
             continue
 
-        # if i == 700:
+        # if i == 800:
         #     print(f"\nSTOPPED AT LINE {i + 1}")
         #     stage_name = df.iloc[i]['Stage_Name']
         #     full_name = df.iloc[i]['Full_Name']
@@ -183,7 +183,7 @@ def upload_to_s3(input_csv, output_csv):
 
         temp_stage_name = stage_name.replace(" ", "")
         temp_full_name = full_name.replace(" ", "") if full_name else ""
-        filename = "female_idols/" + temp_stage_name + '_' + temp_full_name
+        filename = "male_idols/" + temp_stage_name + '_' + temp_full_name
 
         if ".png" in pic_url:
             filename += ".png"
@@ -282,9 +282,9 @@ def main():
     # scrape_images_to_csv(female_idol_csv, output_path)
 
 # --- Saving images to s3 --- #
-    input_csv = "data\\female_idols_with_pics.csv"
-    output_csv = "data\\female_idol_filenames.csv"
-    upload_to_s3(input_csv, output_csv)
+    input_csv = "data\male_idols_with_pics.csv"
+    output_csv = "data\male_idol_filenames.csv"
+    # upload_to_s3(input_csv, output_csv)
 
 # --- Downloading images to local storage --- #
     # input_csv = "data\\female_idols_with_pics.csv"
