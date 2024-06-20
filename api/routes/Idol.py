@@ -1,78 +1,77 @@
-from routes.db import select_query, select_all_query
-from flask import Flask, jsonify, Blueprint, request
-from flask_restful import Api, Resource
+from flask import jsonify, Blueprint
+from flask_restful import Api
+from models.Idol import Idol
+from db import session
+from sqlalchemy import func
 
 idol_api = Blueprint('drama_api', __name__)
 api = Api(idol_api)
 
-# fetch idol by id
-@idol_api.route("/idols/<int:idol_id>", methods=['GET'])
-def get_idol_by_id(idol_id):
+@idol_api.route("/idols/<int:id>", methods=['GET'])
+def get_idol(id):
+    idol = session.query(Idol).filter_by(id=id).first()
+    image_url = idol.image_urls[0].url
 
-    sql = f"SELECT * FROM idol WHERE id = {idol_id};"
-    results = select_all_query(sql)
+    return jsonify({
+        'id': idol.id,
+        'stage_name': idol.stage_name,
+        'full_name': idol.full_name,
+        'korean_name': idol.korean_name,
+        'group': idol.idol_group,
+        'country': idol.country,
+        'gender': idol.gender,
+        'picture_url': image_url})
 
-    if results:
-        return jsonify(results)
+@idol_api.route("/idols/random-idol/<string:gender>", methods=['GET'])
+def get_random_idol(gender):
+    if gender == 'female':
+        idol = session.query(Idol).filter(Idol.gender == "Female").order_by(func.random()).first()
+    elif gender == 'male':
+        idol = session.query(Idol).filter(Idol.gender == "Male").order_by(func.random()).first()
     else:
-        return "bruh"
+        idol = session.query(Idol).order_by(func.random()).first()
+    image_url = idol.image_urls[0].url
 
-# get idol by stage name
-@idol_api.route("/idols/<string:stage_name>", methods=['GET'])
-def get_idol_by_stage_name(stage_name):
+    return jsonify({
+        'id': idol.id,
+        'stage_name': idol.stage_name,
+        'full_name': idol.full_name,
+        'korean_name': idol.korean_name,
+        'group': idol.idol_group,
+        'country': idol.country,
+        'gender': idol.gender,
+        'picture_url': image_url})
 
-    sql = f"SELECT * FROM idol WHERE stage_name = {stage_name};"
-    results = select_all_query(sql)
+@idol_api.route("/idols/female-idols", methods=['GET'])
+def all_male_idols():
+    results = session.query(Idol).filter(Idol.gender == "Female").all()
 
-    if results:
-        return jsonify(results)
-    else:
-        return "bruh"
+    all_female = []
+    for idol in results:
+        idol_dict = {}
+        idol_dict['id'] = idol.id
+        idol_dict['stage_name'] = idol.stage_name
+        idol_dict['full_name'] = idol.full_name
+        idol_dict['korean_name'] = idol.korean_name
+        idol_dict['group'] = idol.idol_group
+        idol_dict['country'] = idol.country
+        idol_dict['gender'] = idol.gender
+        all_female.append(idol_dict)
+    return jsonify(all_female)
 
-# get idols of a group
-@idol_api.route("/idols/<string:group_name>", methods=['GET'])
-def get_group(group_name):
+@idol_api.route("/idols/male-idols", methods=['GET'])
+def all_female_idols():
+    results = session.query(Idol).filter(Idol.gender == "Male").all()
 
-    sql = f"SELECT * FROM idol WHERE group = {group_name};"
-    results = select_all_query(sql)
-
-    if results:
-        return jsonify(results)
-    else:
-        return "bruh"
-
-# get all claimed idols
-@idol_api.route("/idols/claimed", methods=['GET'])
-def get_claimed(group_name):
-
-    sql = f"SELECT * FROM idol WHERE group = {group_name};"
-    results = select_all_query(sql)
-
-    if results:
-        return jsonify(results)
-    else:
-        return "bruh"
-
-# get all claimed male idols
-@idol_api.route("/idols/claimed/male", methods=['GET'])
-def get_claimed_males(group_name):
-
-    sql = f"SELECT * FROM idol WHERE group = {group_name};"
-    results = select_all_query(sql)
-
-    if results:
-        return jsonify(results)
-    else:
-        return "bruh"
-
-# get all claimed female idols
-@idol_api.route("/idols/claimed/female", methods=['GET'])
-def get_claimed_females(group_name):
-
-    sql = f"SELECT * FROM idol WHERE group = {group_name};"
-    results = select_all_query(sql)
-
-    if results:
-        return jsonify(results)
-    else:
-        return "bruh"
+    all_males = []
+    for idol in results:
+        idol_dict = {}
+        idol_dict['id'] = idol.id
+        idol_dict['stage_name'] = idol.stage_name
+        idol_dict['full_name'] = idol.full_name
+        idol_dict['korean_name'] = idol.korean_name
+        idol_dict['group'] = idol.idol_group
+        idol_dict['country'] = idol.country
+        idol_dict['gender'] = idol.gender
+        all_males.append(idol_dict)
+    return jsonify(all_males)

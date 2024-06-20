@@ -3,8 +3,13 @@ import psycopg2.pool
 from dotenv import load_dotenv
 import os
 import csv
+from sqlalchemy_utils import database_exists
+from sqlalchemy import create_engine
+from sqlalchemy import MetaData
+from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.orm import Session
 
-def get_connection():
+def get_connection_psycop():
     try:
         load_dotenv() 
         print("Connecting to PostgreSQL database...")
@@ -20,7 +25,7 @@ def get_connection():
 
 
 def upload_idols_to_db(input_file, type):
-    conn = get_connection()
+    conn = get_connection_psycop()
     with open(input_file, 'r', encoding="utf-8") as f:
         headers = next(f) # skip column names
         counter = 0
@@ -54,10 +59,29 @@ def upload_idols_to_db(input_file, type):
     conn.close()
     cursor.close()
 
+def get_engine():
+    host = os.environ.get("DB_HOST")
+    db_name = os.environ.get("DB_NAME")
+    user = os.environ.get("DB_USER")
+    password = os.environ.get("DB_PASSWORD")
+    url = f'postgresql+psycopg2://{user}:{password}@{host}:5432/{db_name}'
+    if database_exists(url):
+        print("connected to db!")
+    else:
+        print("couldn't connect")
+
+    engine = create_engine(url)
+    return engine
+
 def main():
     # female_input_path = "data\\female_idol_filenames.csv"
     male_input_path = "data\male_idol_filenames.csv"
     yuh = "Male"
-    # upload_idols_to_db(male_input_path, yuh)
-
+    engine = get_engine()
+    engine.dispose()
 # main()
+
+engine = get_engine()
+metadata = MetaData()
+metadata.reflect(engine)
+session = Session(bind=engine)
