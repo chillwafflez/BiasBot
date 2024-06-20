@@ -1,5 +1,6 @@
 from flask import Flask, Response
 from routes.Idol import idol_api
+from routes.User import user_api
 
 app = Flask(__name__)
 
@@ -8,6 +9,7 @@ def home():
     return Response("bias bot home", 200)
 
 app.register_blueprint(idol_api)
+app.register_blueprint(user_api)
 
 if __name__ == '__main__':
     app.run(debug=True)

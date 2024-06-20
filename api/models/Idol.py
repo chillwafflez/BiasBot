@@ -24,3 +24,11 @@ class Idol_Picture(Base):
     url = Column(TEXT)
 
     idol = relationship('Idol', back_populates='image_urls')
+
+class Idol_Server(Base):
+    __tablename__ = 'idol_server'
+
+    id = Column(Integer)
+    idol_id = Column(Integer, ForeignKey("idol.id"), primary_key=True)
+    user_server_id = Column(Integer, ForeignKey("user_server.id"), primary_key=True)
+    status = Column(TEXT)

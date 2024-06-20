@@ -5,7 +5,6 @@ from db import session
 from sqlalchemy import func
 
 idol_api = Blueprint('drama_api', __name__)
-api = Api(idol_api)
 
 @idol_api.route("/idols/<int:id>", methods=['GET'])
 def get_idol(id):
@@ -43,27 +42,30 @@ def get_random_idol(gender):
         'picture_url': image_url})
 
 @idol_api.route("/idols/female-idols", methods=['GET'])
-def all_male_idols():
+def all_female_idols():
     results = session.query(Idol).filter(Idol.gender == "Female").all()
+    all_female = convert_idols_to_dict(results)
 
-    all_female = []
-    for idol in results:
-        idol_dict = {}
-        idol_dict['id'] = idol.id
-        idol_dict['stage_name'] = idol.stage_name
-        idol_dict['full_name'] = idol.full_name
-        idol_dict['korean_name'] = idol.korean_name
-        idol_dict['group'] = idol.idol_group
-        idol_dict['country'] = idol.country
-        idol_dict['gender'] = idol.gender
-        all_female.append(idol_dict)
     return jsonify(all_female)
 
 @idol_api.route("/idols/male-idols", methods=['GET'])
-def all_female_idols():
+def all_male_idols():
     results = session.query(Idol).filter(Idol.gender == "Male").all()
+    all_males = convert_idols_to_dict(results)
 
-    all_males = []
+    return jsonify(all_males)
+
+@idol_api.route("/idols/groups/<string:group>", methods=['GET'])
+def get_group(group):
+    results = session.query(Idol).filter(Idol.idol_group == group).all()
+    idols = convert_idols_to_dict(results)
+
+    return jsonify(idols)
+
+
+# utils
+def convert_idols_to_dict(results):
+    idols = []
     for idol in results:
         idol_dict = {}
         idol_dict['id'] = idol.id
@@ -73,5 +75,5 @@ def all_female_idols():
         idol_dict['group'] = idol.idol_group
         idol_dict['country'] = idol.country
         idol_dict['gender'] = idol.gender
-        all_males.append(idol_dict)
-    return jsonify(all_males)
+        idols.append(idol_dict)
+    return idols
