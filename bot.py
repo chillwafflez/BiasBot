@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import csv
 import random
 from idol_scraper import scrape_idol_image
-
+import requests
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -14,61 +14,60 @@ intents = discord.Intents.all()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix='$', intents=intents)
+emojis = ["♥️", "💓", "💗", "🩷", "💜", "💘", "💖"]
+base_url = "http://127.0.0.1:5000/"
 
 @bot.command()
 async def mi(ctx):
-    stage_name = ""
-    korean_name = ""
-    group = ""
-    # with open("data\male_idols.csv", 'r', encoding="utf-8") as f:
-    with open("data\male_idols_with_pics.csv", 'r', encoding="utf-8") as f:
-        reader = csv.reader(f, delimiter=',')
-        next(reader)
-
-        chosen_row = random.choice(list(reader))
-        stage_name =  chosen_row[0]
-        korean_name = chosen_row[2]
-        group = chosen_row[3]
-        idol_picture_url = chosen_row[5]
-    
+    url = base_url + "/idols/random-idol/male"
+    response = requests.get(url)
+    idol_info = response.json()
+    stage_name = idol_info['stage_name']
+    korean_name = idol_info['korean_name']
+    group = idol_info['group']
+    idol_picture_url = "https://bias-bot-images.s3.us-west-1.amazonaws.com/" + idol_info['picture_url']
+ 
     embed = discord.Embed(
         color=discord.Color.pink(),
         description=group,
         title=f"{stage_name} ({korean_name})"
     )
-    # print(f"Fetching picture for {stage_name} from {group}")
-    # idol_picture_url = scrape_idol_image(stage_name, group)
-    # print(f"url: {idol_picture_url}")
     embed.set_image(url=idol_picture_url) 
+    msg = await ctx.send(embed=embed)
+    await msg.add_reaction(random.choice(emojis))
 
-    await ctx.send(embed=embed)
 
 @bot.command()
 async def fi(ctx):
-    stage_name = ""
-    korean_name = ""
-    group = ""
-    with open("data\\female_idols.csv", 'r', encoding="utf-8") as f:
-        reader = csv.reader(f, delimiter=',')
-        next(reader)
+    url = base_url + "/idols/random-idol/female"
+    response = requests.get(url)
+    idol_info = response.json()
+    stage_name = idol_info['stage_name']
+    korean_name = idol_info['korean_name']
+    group = idol_info['group']
+    idol_picture_url = "https://bias-bot-images.s3.us-west-1.amazonaws.com/" + idol_info['picture_url']
 
-        chosen_row = random.choice(list(reader))
-        stage_name =  chosen_row[0]
-        korean_name = chosen_row[2]
-        group = chosen_row[3]
-    
     embed = discord.Embed(
         color=discord.Color.pink(),
         description=group,
         title=f"{stage_name} ({korean_name})"
     )
-    print(f"Fetching picture for {stage_name} from {group}")
-    idol_picture_url = scrape_idol_image(stage_name, group)
-    print(f"url: {idol_picture_url}")
     embed.set_image(url=idol_picture_url) 
-    # embed.set_image(url='https://static.wikia.nocookie.net/kep1er/images/3/38/Youngeun_Magic_Hour_%28Sunkissed_Ver%29_Concept_Photo_1.jpeg/revision/latest?cb=20230916010214')
+    msg = await ctx.send(embed=embed)
+    await msg.add_reaction(random.choice(emojis))
 
-    await ctx.send(embed=embed)
+@bot.command()
+async def guildInfo(ctx):
+    server_name = ctx.guild.name
+    server_id = ctx.guild.id
+    await ctx.send(f"Server name: {server_name} | Server ID: {server_id}")
+
+@bot.command()
+async def userID(ctx):
+    user_name = ctx.message.author.name
+    user_id = ctx.message.author.id
+    user_nickname = ctx.message.author.nick
+    await ctx.send(f"User name: {user_name} | User ID: {user_id} | Server nickname: {user_nickname}")
 
 
 bot.run(TOKEN)
