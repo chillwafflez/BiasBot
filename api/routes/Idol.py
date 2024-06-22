@@ -1,6 +1,5 @@
 from flask import jsonify, Blueprint
-from flask_restful import Api
-from models.Idol import Idol
+from models.Classes import Idol
 from db import session
 from sqlalchemy import func
 

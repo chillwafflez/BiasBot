@@ -16,7 +16,7 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix='$', intents=intents)
 emojis = ["♥️", "💓", "💗", "🩷", "💜", "💘", "💖"]
-base_url = "http://127.0.0.1:5000/"
+base_url = "http://127.0.0.1:5000"
 
 @bot.command()
 async def mi(ctx):
@@ -89,5 +89,20 @@ async def userID(ctx):
     user_nickname = ctx.message.author.nick
     await ctx.send(f"User name: {user_name} | User ID: {user_id} | Server nickname: {user_nickname}")
 
+@bot.event
+async def on_guild_join(guild):
+    print(f'Joined guild: {guild.name} | ID: {guild.id}')
+    url = base_url + "/servers"
+    body = {"server_id": guild.id, "name": guild.name}
+
+    response = requests.post(url, json=body)
+    print(f"penis: {response}")
+
+
+@bot.event
+async def on_guild_remove(guild):
+    print(f'Left guild: {guild.name} | ID: {guild.id}')
+    url = base_url + "/servers/" + str(guild.id)
+    requests.delete(url)
 
 bot.run(TOKEN)
