@@ -6,7 +6,6 @@ import csv
 from sqlalchemy_utils import database_exists
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 
 def get_connection_psycop():

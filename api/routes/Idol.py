@@ -1,7 +1,8 @@
-from flask import jsonify, Blueprint
-from models.Classes import Idol
+from flask import jsonify, Blueprint, request
+from models.Classes import Idol, Idol_Server, User_Server, User
 from db import session
 from sqlalchemy import func
+from sqlalchemy.exc import SQLAlchemyError
 
 idol_api = Blueprint('drama_api', __name__)
 
@@ -22,24 +23,52 @@ def get_idol(id):
 
 @idol_api.route("/idols/random-idol/<string:gender>", methods=['GET'])
 def get_random_idol(gender):
-    if gender == 'female':
-        idol = session.query(Idol).filter(Idol.gender == "Female").order_by(func.random()).first()
-    elif gender == 'male':
-        idol = session.query(Idol).filter(Idol.gender == "Male").order_by(func.random()).first()
-    else:
-        idol = session.query(Idol).order_by(func.random()).first()
-    image_url = idol.image_urls[0].url
+    try:
+        if gender == 'female':
+            idol = session.query(Idol).filter(Idol.gender == "Female").order_by(func.random()).first()
+        elif gender == 'male':
+            idol = session.query(Idol).filter(Idol.gender == "Male").order_by(func.random()).first()
+        else:
+            idol = session.query(Idol).order_by(func.random()).first()
+        image_url = idol.image_urls[0].url
 
-    return jsonify({
-        'id': idol.id,
-        'stage_name': idol.stage_name,
-        'full_name': idol.full_name,
-        'korean_name': idol.korean_name,
-        'group': idol.idol_group,
-        'country': idol.country,
-        'gender': idol.gender,
-        'picture_url': image_url})
+        return jsonify({
+            'id': idol.id,
+            'stage_name': idol.stage_name,
+            'full_name': idol.full_name,
+            'korean_name': idol.korean_name,
+            'group': idol.idol_group,
+            'country': idol.country,
+            'gender': idol.gender,
+            'picture_url': image_url})
+    except SQLAlchemyError as e:
+        session.rollback()
+        return jsonify({"error": str(e)}), 500
 
+@idol_api.route("/idols/", methods=['GET'])     # exp url: http://127.0.0.1:5000/idols/?idolID=11&serverID=70
+def get_status():
+    idol_id = request.args.get('idolID')
+    server_id = request.args.get('serverID')
+
+    try:
+        idol_server_record = session.query(Idol_Server).filter_by(idol_id=idol_id, server_id=server_id).first()
+        if (idol_server_record):  
+            user = session.query(User).join(User_Server).filter(User_Server.id == idol_server_record.user_server_id).first()
+            print(f"This idol has been claimed in this server by {user.username}")
+
+            response = {
+                "claimed": True, 
+                "user_id": user.id,
+                "username": user.username
+            }
+            return jsonify(response), 200
+        else:
+            print("Idol has not been claimed yet in this server")
+            return jsonify({"claimed": False}), 200
+    except SQLAlchemyError as e:
+        session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
 @idol_api.route("/idols/female-idols", methods=['GET'])
 def all_female_idols():
     results = session.query(Idol).filter(Idol.gender == "Female").all()

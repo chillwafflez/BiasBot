@@ -3,9 +3,7 @@ import os
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-import csv
 import random
-from idol_scraper import scrape_idol_image
 import requests
 
 load_dotenv()
@@ -20,9 +18,11 @@ base_url = "http://127.0.0.1:5000"
 
 @bot.command()
 async def mi(ctx):
-    url = base_url + "/idols/random-idol/male"
-    response = requests.get(url)
+    # get random idol 
+    idol_request_url = base_url + "/idols/random-idol/male"
+    response = requests.get(idol_request_url)
     idol_info = response.json()
+    print(f"IDOL ID: {idol_info['id']}")
     stage_name, korean_name, group = idol_info['stage_name'], idol_info['korean_name'], idol_info['group']
     idol_picture_url = "https://bias-bot-images.s3.us-west-1.amazonaws.com/" + idol_info['picture_url']
  
@@ -32,25 +32,42 @@ async def mi(ctx):
         title=f"{stage_name} ({korean_name})"
     )
     embed.set_image(url=idol_picture_url) 
-    msg = await ctx.send(embed=embed)
-    emoji = random.choice(emojis)
-    await msg.add_reaction(emoji)
 
-    def check(reaction, user):
-        return user != bot.user and str(reaction.emoji) == emoji
-    try:
-        reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=check)
-        await ctx.send(f"User {user.name} ({user.id}) claimed {stage_name} as their bias!")
-        print(f"User name: {user.name} | User ID: {user.id} | Server name: {ctx.guild.name} | Server ID: {ctx.guild.id}")
-    except asyncio.TimeoutError:
-        await ctx.send(f"Ran out of time to claim {stage_name}")
-    else:
-        await ctx.send(f"peepee")
+    # check if idol has been claimed by anyone in the server
+    status_request_url = base_url + f"/idols/?idolID={idol_info['id']}&serverID={ctx.guild.id}"
+    response = requests.get(status_request_url)
+    status_info = response.json()
+
+    if (status_info['claimed']):                # if claimed, output idol but unclaimable
+        embed.set_footer(text=f"Claimed by {status_info['username']}")
+        print(f"Claimed by {status_info['username']}")
+        msg = await ctx.send(embed=embed)
+    else:                                       # if unclaimed, idol is claimable via reaction
+        msg = await ctx.send(embed=embed)
+        emoji = random.choice(emojis)
+        await msg.add_reaction(emoji)
+
+        def check(reaction, user):
+            return user != bot.user and str(reaction.emoji) == emoji and reaction.message.id == msg.id
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=check)
+
+            claimed = add_claimed(user.id, user.name, ctx.guild.id, idol_info['id'])        # update idol to be claimed (create User, User_Server, Idol_Server)
+            if (claimed):
+                await ctx.send(f"User {user.name} claimed {stage_name} as their bias!")
+                print(f"User name: {user.name} | User ID: {user.id} | Server name: {ctx.guild.name} | Server ID: {ctx.guild.id}")
+            else:
+                await ctx.send(f"Error claiming {stage_name} for {user.name}")
+        except asyncio.TimeoutError:
+            await ctx.send(f"Ran out of time to claim {stage_name}")
+        # else:
+        #     await ctx.send(f"peepee")
 
 @bot.command()
 async def fi(ctx):
-    url = base_url + "/idols/random-idol/female"
-    response = requests.get(url)
+    # get random idol 
+    idol_request_url = base_url + "/idols/random-idol/female"
+    response = requests.get(idol_request_url)
     idol_info = response.json()
     stage_name, korean_name, group = idol_info['stage_name'], idol_info['korean_name'], idol_info['group']
     idol_picture_url = "https://bias-bot-images.s3.us-west-1.amazonaws.com/" + idol_info['picture_url']
@@ -61,21 +78,90 @@ async def fi(ctx):
         title=f"{stage_name} ({korean_name})"
     )
     embed.set_image(url=idol_picture_url) 
-    msg = await ctx.send(embed=embed)
-    emoji = random.choice(emojis)
-    await msg.add_reaction(emoji)
 
-    def check(reaction, user):
-        return user != bot.user and str(reaction.emoji) == emoji
-    try:
-        reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=check)
-        await ctx.send(f"User {user.name} ({user.id}) claimed {stage_name} as their bias!")
-        print(f"User name: {user.name} | User ID: {user.id} | Server name: {ctx.guild.name} | Server ID: {ctx.guild.id}")
-    except asyncio.TimeoutError:
-        await ctx.send(f"Ran out of time to claim {stage_name}")
+    # check if idol has been claimed by anyone in the server
+    status_request_url = base_url + f"/idols/?idolID={idol_info['id']}&serverID={ctx.guild.id}"
+    response = requests.get(status_request_url)
+    status_info = response.json()
+
+    if (status_info['claimed']):                # if claimed, output idol but unclaimable
+        embed.set_footer(text=f"Claimed by {status_info['username']}")
+        print(f"Claimed by {status_info['username']}")
+        msg = await ctx.send(embed=embed)
+    else:                                       # if unclaimed, idol is claimable via reaction
+        msg = await ctx.send(embed=embed)
+        emoji = random.choice(emojis)
+        await msg.add_reaction(emoji)
+
+        def check(reaction, user):
+            return user != bot.user and str(reaction.emoji) == emoji and reaction.message.id == msg.id
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=check)
+
+            claimed = add_claimed(user.id, user.name, ctx.guild.id, idol_info['id'])        # update idol to be claimed (create User, User_Server, Idol_Server)
+            if (claimed):
+                await ctx.send(f"User {user.name} claimed {stage_name} as their bias!")
+                print(f"User name: {user.name} | User ID: {user.id} | Server name: {ctx.guild.name} | Server ID: {ctx.guild.id}")
+            else:
+                await ctx.send(f"Error claiming {stage_name} for {user.name}")
+        except asyncio.TimeoutError:
+            await ctx.send(f"Ran out of time to claim {stage_name}")
+        # else:
+        #     await ctx.send(f"end")
+
+
+@bot.command()
+async def collection(ctx):
+    request_url = base_url + f"/users/collection?userID={ctx.message.author.id}&serverID={ctx.guild.id}"
+    response = requests.get(request_url).json()
+    description = f"\n**Number of idols:** {len(response)}\n\n"
+    counter = 1
+    if len(response) > 0:
+        for idol in response:
+            group = idol['group'] if idol['group'] else None
+            description += f"**#{counter}** - {idol['stage_name']}  |  Group: {group}\n"
+            counter += 1
+
+        embed = discord.Embed(
+            color=discord.Color.pink(),
+            description=description
+        )
+        first_idol_id = response[0]['id']
+        request_url = base_url + f"/idols/{first_idol_id}"
+        response = requests.get(request_url)
+        first_idol_picture = "https://bias-bot-images.s3.us-west-1.amazonaws.com/" + response.json()['picture_url']
+
+        embed.set_thumbnail(url=first_idol_picture)
+        embed.set_author(name=f"{ctx.message.author.name}'s collection", icon_url=ctx.message.author.avatar.url)
+        await ctx.send(embed=embed)
     else:
-        await ctx.send(f"peepee")
+        embed = discord.Embed(
+            color=discord.Color.pink(),
+            description="Empty :("
+        )
+        embed.set_thumbnail(url=ctx.message.author.avatar.url)
+        embed.set_author(name=f"{ctx.message.author.name}'s collection", icon_url=ctx.message.author.avatar.url)
+        await ctx.send(embed=embed)
 
+
+# commands to add or remove servers from database
+@bot.event
+async def on_guild_join(guild):
+    print(f'Joined guild: {guild.name} | ID: {guild.id}')
+    url = base_url + "/servers"
+    body = {"server_id": guild.id, "name": guild.name}
+
+    response = requests.post(url, json=body)
+    print(f"penis: {response}")
+
+@bot.event
+async def on_guild_remove(guild):
+    print(f'Left guild: {guild.name} | ID: {guild.id}')
+    url = base_url + "/servers/" + str(guild.id)
+    requests.delete(url)
+
+
+# util commands
 @bot.command()
 async def guildInfo(ctx):
     server_name = ctx.guild.name
@@ -89,20 +175,21 @@ async def userID(ctx):
     user_nickname = ctx.message.author.nick
     await ctx.send(f"User name: {user_name} | User ID: {user_id} | Server nickname: {user_nickname}")
 
-@bot.event
-async def on_guild_join(guild):
-    print(f'Joined guild: {guild.name} | ID: {guild.id}')
-    url = base_url + "/servers"
-    body = {"server_id": guild.id, "name": guild.name}
 
-    response = requests.post(url, json=body)
-    print(f"penis: {response}")
+def add_claimed(user_id, username, server_id, idol_id):
+    add_user_url = base_url + "/users"
+    body = {"user_id": user_id, "username": username}
+    user_info = requests.post(add_user_url, json=body)      # add user to database
+    response = user_info.json()
 
-
-@bot.event
-async def on_guild_remove(guild):
-    print(f'Left guild: {guild.name} | ID: {guild.id}')
-    url = base_url + "/servers/" + str(guild.id)
-    requests.delete(url)
+    if (response["created"]):  # if user already exists in database or successfully created
+        add_claimed_url = base_url + "/users/claimed"
+        body = {"user_id": response['user_id'], "username": username, "idol_id": idol_id, "server_id": server_id}
+        claimed_info = requests.post(add_claimed_url, json=body)
+    
+    if claimed_info.status_code == 200:
+        return True
+    else:
+        return False
 
 bot.run(TOKEN)
