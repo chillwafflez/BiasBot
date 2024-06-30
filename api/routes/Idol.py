@@ -6,6 +6,48 @@ from sqlalchemy.exc import SQLAlchemyError
 
 idol_api = Blueprint('drama_api', __name__)
 
+@idol_api.route("/idols/info", methods=['GET'])
+def search_idol():
+    post_body = request.args.get('query')
+    cleaned_search_term = post_body.strip().lower()
+
+    def process_results(results):
+        idols = []
+        for idol in results:
+            idol_data = {}
+            idol_data["id"] = idol.id
+            idol_data["stage_name"] = idol.stage_name
+            idol_data["full_name"] = idol.full_name
+            idol_data['korean_name'] = idol.korean_name
+            idol_data["group"] = idol.idol_group
+            idol_data['country'] = idol.country
+            idol_data['gender'] = idol.gender
+
+            idols.append(idol_data)
+        return jsonify({'results': idols, 'found': True})
+
+    try:
+        print("Searching by stage name...")
+        stage_name_results = session.query(Idol).filter(func.lower(Idol.stage_name) == cleaned_search_term).all()
+        print(f"length of stage results: {len(stage_name_results)}")
+
+        if len(stage_name_results) > 0:
+            results = process_results(stage_name_results)
+            return results
+        
+        print("Searching by full name...")
+        full_name_results = session.query(Idol).filter(func.lower(Idol.full_name) == cleaned_search_term).all()
+        print(f"length of full name results: {len(full_name_results)}")
+        if len(full_name_results) > 0:
+            results = process_results(full_name_results)
+            return results
+        
+        return jsonify({"found": False}), 404
+
+    except SQLAlchemyError as e:
+        session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 @idol_api.route("/idols/<int:id>", methods=['GET'])
 def get_idol(id):
     idol = session.query(Idol).filter_by(id=id).first()

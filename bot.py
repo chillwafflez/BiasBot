@@ -54,14 +54,12 @@ async def mi(ctx):
 
             claimed = add_claimed(user.id, user.name, ctx.guild.id, idol_info['id'])        # update idol to be claimed (create User, User_Server, Idol_Server)
             if (claimed):
-                await ctx.send(f"User {user.name} claimed {stage_name} as their bias!")
+                await ctx.send(f"{emoji} **{user.name}** claimed **{stage_name}** as their bias! {emoji}")
                 print(f"User name: {user.name} | User ID: {user.id} | Server name: {ctx.guild.name} | Server ID: {ctx.guild.id}")
             else:
                 await ctx.send(f"Error claiming {stage_name} for {user.name}")
         except asyncio.TimeoutError:
             await ctx.send(f"Ran out of time to claim {stage_name}")
-        # else:
-        #     await ctx.send(f"peepee")
 
 @bot.command()
 async def fi(ctx):
@@ -100,15 +98,53 @@ async def fi(ctx):
 
             claimed = add_claimed(user.id, user.name, ctx.guild.id, idol_info['id'])        # update idol to be claimed (create User, User_Server, Idol_Server)
             if (claimed):
-                await ctx.send(f"User {user.name} claimed {stage_name} as their bias!")
+                await ctx.send(f"{emoji} **{user.name}** claimed **{stage_name}** as their bias! {emoji}")
                 print(f"User name: {user.name} | User ID: {user.id} | Server name: {ctx.guild.name} | Server ID: {ctx.guild.id}")
             else:
                 await ctx.send(f"Error claiming {stage_name} for {user.name}")
         except asyncio.TimeoutError:
             await ctx.send(f"Ran out of time to claim {stage_name}")
-        # else:
-        #     await ctx.send(f"end")
 
+@bot.command()
+async def info(ctx, first_word, *args):
+    if (len(args) > 0):
+        arguments = ' '.join(args)
+        query = first_word + ' ' + arguments
+    else:
+        query = first_word
+
+    request_url = base_url + f"/idols/info?query={query}"
+    response = requests.get(request_url).json()
+    if (response["found"]):
+        results = response["results"]
+        if len(results) > 1:
+            description = f"\n**Number of results:** {len(results)}\n\n"
+            for idol in results:
+                group = idol['group'] if idol['group'] else None
+                if (group != None):
+                    description += f"**{idol['stage_name']}** - {group}\n"
+                else:
+                    description += f"**{idol['stage_name']}**\n"
+            embed = discord.Embed(
+                color=discord.Color.pink(),
+                description=description)
+        else:
+            idol_info = results[0]
+            description = f"Full Name: {idol_info['full_name']}\n Korean Name: {idol_info['korean_name']}\n Group: {idol_info['group']}\n Country: {idol_info['country']}\n"
+            embed = discord.Embed(
+                color=discord.Color.pink(),
+                description=description)
+
+            idol_id = idol_info['id']
+            request_url = base_url + f"/idols/{idol_id}"
+            response = requests.get(request_url)
+            idol_picture_url = "https://bias-bot-images.s3.us-west-1.amazonaws.com/" + response.json()['picture_url']  
+            embed.set_image(url=idol_picture_url) 
+
+            embed.set_author(name=f"{idol_info['stage_name']}")
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send("Idol not found :(")
 
 @bot.command()
 async def collection(ctx):
