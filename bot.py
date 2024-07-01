@@ -18,6 +18,21 @@ base_url = "http://127.0.0.1:5000"
 
 @bot.command()
 async def mi(ctx):
+    # check if user has any rolls remaining
+    user_id = ctx.message.author.id
+    user_name = ctx.message.author.name
+    server_id = ctx.guild.id
+    check_rolls_url = base_url + f"/users/rolls?userID={user_id}&username={user_name}&serverID={server_id}"
+    response = requests.get(check_rolls_url)
+    rolls_info = response.json()
+    roll_msg = ""
+    if (rolls_info['has_rolls']):
+        if (rolls_info['remaining'] == 2):
+            roll_msg = "⚠️ 2 ROLLS LEFT ⚠️"
+    else:
+        await ctx.send(f"**{user_name}**, you got no more rolls for this pull period :(")
+        return
+
     # get random idol 
     idol_request_url = base_url + "/idols/random-idol/male"
     response = requests.get(idol_request_url)
@@ -25,14 +40,15 @@ async def mi(ctx):
     print(f"IDOL ID: {idol_info['id']}")
     stage_name, korean_name, group = idol_info['stage_name'], idol_info['korean_name'], idol_info['group']
     idol_picture_url = "https://bias-bot-images.s3.us-west-1.amazonaws.com/" + idol_info['picture_url']
- 
+
     embed = discord.Embed(
         color=discord.Color.pink(),
         description=group,
         title=f"{stage_name} ({korean_name})"
     )
     embed.set_image(url=idol_picture_url) 
-
+    if (roll_msg): embed.set_footer(text=roll_msg)
+    
     # check if idol has been claimed by anyone in the server
     status_request_url = base_url + f"/idols/?idolID={idol_info['id']}&serverID={ctx.guild.id}"
     response = requests.get(status_request_url)
@@ -42,6 +58,7 @@ async def mi(ctx):
         embed.set_footer(text=f"Claimed by {status_info['username']}")
         print(f"Claimed by {status_info['username']}")
         msg = await ctx.send(embed=embed)
+        return
     else:                                       # if unclaimed, idol is claimable via reaction
         msg = await ctx.send(embed=embed)
         emoji = random.choice(emojis)
@@ -52,17 +69,32 @@ async def mi(ctx):
         try:
             reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=check)
 
-            claimed = add_claimed(user.id, user.name, ctx.guild.id, idol_info['id'])        # update idol to be claimed (create User, User_Server, Idol_Server)
+            claimed, claim_msg = add_claimed(user.id, user.name, ctx.guild.id, idol_info['id'])        # update idol to be claimed (create User, User_Server, Idol_Server)
             if (claimed):
                 await ctx.send(f"{emoji} **{user.name}** claimed **{stage_name}** as their bias! {emoji}")
                 print(f"User name: {user.name} | User ID: {user.id} | Server name: {ctx.guild.name} | Server ID: {ctx.guild.id}")
             else:
-                await ctx.send(f"Error claiming {stage_name} for {user.name}")
+                await ctx.send(claim_msg)
         except asyncio.TimeoutError:
-            await ctx.send(f"Ran out of time to claim {stage_name}")
+            print(f"Ran out of time to claim {stage_name}")
 
 @bot.command()
 async def fi(ctx):
+    # check if user has any rolls remaining
+    user_id = ctx.message.author.id
+    user_name = ctx.message.author.name
+    server_id = ctx.guild.id
+    check_rolls_url = base_url + f"/users/rolls?userID={user_id}&username={user_name}&serverID={server_id}"
+    response = requests.get(check_rolls_url)
+    rolls_info = response.json()
+    roll_msg = ""
+    if (rolls_info['has_rolls']):
+        if (rolls_info['remaining'] == 2):
+            roll_msg = "⚠️ 2 ROLLS LEFT ⚠️"
+    else:
+        await ctx.send(f"**{user_name}**, you got no more rolls for this pull period :(")
+        return
+
     # get random idol 
     idol_request_url = base_url + "/idols/random-idol/female"
     response = requests.get(idol_request_url)
@@ -76,6 +108,7 @@ async def fi(ctx):
         title=f"{stage_name} ({korean_name})"
     )
     embed.set_image(url=idol_picture_url) 
+    if (roll_msg): embed.set_footer(text=roll_msg)
 
     # check if idol has been claimed by anyone in the server
     status_request_url = base_url + f"/idols/?idolID={idol_info['id']}&serverID={ctx.guild.id}"
@@ -86,6 +119,7 @@ async def fi(ctx):
         embed.set_footer(text=f"Claimed by {status_info['username']}")
         print(f"Claimed by {status_info['username']}")
         msg = await ctx.send(embed=embed)
+        return
     else:                                       # if unclaimed, idol is claimable via reaction
         msg = await ctx.send(embed=embed)
         emoji = random.choice(emojis)
@@ -96,14 +130,14 @@ async def fi(ctx):
         try:
             reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=check)
 
-            claimed = add_claimed(user.id, user.name, ctx.guild.id, idol_info['id'])        # update idol to be claimed (create User, User_Server, Idol_Server)
+            claimed, claim_msg = add_claimed(user.id, user.name, ctx.guild.id, idol_info['id'])        # update idol to be claimed (create User, User_Server, Idol_Server)
             if (claimed):
                 await ctx.send(f"{emoji} **{user.name}** claimed **{stage_name}** as their bias! {emoji}")
                 print(f"User name: {user.name} | User ID: {user.id} | Server name: {ctx.guild.name} | Server ID: {ctx.guild.id}")
             else:
-                await ctx.send(f"Error claiming {stage_name} for {user.name}")
+                await ctx.send(claim_msg)
         except asyncio.TimeoutError:
-            await ctx.send(f"Ran out of time to claim {stage_name}")
+            print(f"Ran out of time to claim {stage_name}")
 
 @bot.command()
 async def info(ctx, first_word, *args):
@@ -213,19 +247,25 @@ async def userID(ctx):
 
 
 def add_claimed(user_id, username, server_id, idol_id):
-    add_user_url = base_url + "/users"
-    body = {"user_id": user_id, "username": username}
-    user_info = requests.post(add_user_url, json=body)      # add user to database
-    response = user_info.json()
 
-    if (response["created"]):  # if user already exists in database or successfully created
-        add_claimed_url = base_url + "/users/claimed"
-        body = {"user_id": response['user_id'], "username": username, "idol_id": idol_id, "server_id": server_id}
-        claimed_info = requests.post(add_claimed_url, json=body)
-    
-    if claimed_info.status_code == 200:
-        return True
-    else:
-        return False
+    check_can_claim_url = base_url + f"/users/claimed?userID={user_id}&serverID={server_id}"
+    claim_status_info = requests.get(check_can_claim_url).json()
+    if (claim_status_info['can_claim']):        # if user can claim an idol
+        add_user_url = base_url + "/users"
+        body = {"user_id": user_id, "username": username}
+        user_info = requests.post(add_user_url, json=body)      # add user to database
+        response = user_info.json()
+
+        if (response["created"]):  # if user already exists in database or successfully created
+            add_claimed_url = base_url + "/users/claimed"
+            body = {"user_id": response['user_id'], "username": username, "idol_id": idol_id, "server_id": server_id}
+            claimed_info = requests.post(add_claimed_url, json=body)
+        
+        if claimed_info.status_code == 200:
+            return True, "Yippee"
+        else:
+            return False, f"Error claiming idol with id {idol_id} for {username}"
+    else:       
+        return False, f"**{username}**, you can claim once per interval of 4h"
 
 bot.run(TOKEN)

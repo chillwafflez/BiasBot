@@ -35,6 +35,50 @@ def add_user():
     except SQLAlchemyError as e:
         session.rollback()
         return jsonify({"error": str(e)}), 500
+    
+@user_api.route("/users/rolls", methods=['GET'])
+def check_rolls():
+    user_id = request.args.get('userID')
+    username = request.args.get('username')
+    server_id = request.args.get('serverID')
+
+    try:
+        user_server = session.query(User_Server).filter_by(user_id=user_id, server_id=server_id).first()
+        created = ""
+        if (user_server):
+            created = "user_account record already exists"
+            if (user_server.rolls > 0):
+                user_server.rolls -= 1
+                session.commit()
+                return jsonify({"has_rolls": True,"remaining": user_server.rolls})
+            else:
+                return jsonify({"has_rolls": False, "remaining": 0})
+        else:
+            print("User_Server dont exist (in query for user/rolls), creating them rn")
+            new_user_server = User_Server(user_id=user_id, server_id=server_id, server_profile_name=username, collection_name=f"{username}'s collection!", rolls=8)
+            session.add(new_user_server)
+            session.commit()
+            created = "user_account record just created!"
+            return jsonify({"has_rolls": True,"remaining": new_user_server.rolls, 'created': created})
+    except SQLAlchemyError as e:
+        session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@user_api.route("/users/claimed", methods=['GET'])
+def check_can_claim():
+    user_id = request.args.get('userID')
+    server_id = request.args.get('serverID')
+
+    try:
+        user_server = session.query(User_Server).filter_by(user_id=user_id, server_id=server_id).first()
+        if (user_server.can_claim):
+            return jsonify({"can_claim": True})
+        else:
+            return jsonify({"can_claim": False})
+    except SQLAlchemyError as e:
+        session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 @user_api.route("/users/claimed", methods=['POST'])
 def add_claimed():
@@ -56,11 +100,17 @@ def add_claimed():
             session.commit()
             created = "user_account record just created!"
 
-        user_server_id = session.query(User_Server).filter_by(user_id=user_id, server_id=server_id).first().id
-        new_claimed = Idol_Server(idol_id=idol_id, user_server_id=user_server_id, server_id=server_id, status="Claimed")
+        # claim idol for this user_server
+        user_server = session.query(User_Server).filter_by(user_id=user_id, server_id=server_id).first()
+        new_claimed = Idol_Server(idol_id=idol_id, user_server_id=user_server.id, server_id=server_id, status="Claimed")
         session.add(new_claimed)
         session.commit()
         print(f"Added new claimed")
+
+        # update user_server record to be unable to claim now
+        user_server.can_claim = False
+        # session.query(User_Server).filter(user_id=user_id, server_id=server_id).update({User_Server.can_claim: False})
+        session.commit()
 
         return jsonify({'user_id': user_id,
                         'idol_id': idol_id,
@@ -94,3 +144,23 @@ def get_collection():
     except SQLAlchemyError as e:
         session.rollback()
         return jsonify({"error": str(e)}), 500
+    
+@user_api.route("/users/rolls/reset", methods=['POST'])
+def reset_rolls():
+    try:
+        session.query(User_Server).update({User_Server.rolls: 8})
+        session.commit()
+        return jsonify({"resetted_rolls": True})
+    except SQLAlchemyError as e:
+        session.rollback()
+        return jsonify({"resetted_rolls": True, "error": str(e)}), 500
+
+@user_api.route("/users/claims/reset", methods=['POST'])
+def reset_claims():
+    try:
+        session.query(User_Server).update({User_Server.can_claim: True})
+        session.commit()
+        return jsonify({"resetted_claims": True})
+    except SQLAlchemyError as e:
+        session.rollback()
+        return jsonify({"resetted_claims": True, "error": str(e)}), 500

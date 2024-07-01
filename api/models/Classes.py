@@ -1,5 +1,5 @@
 from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, TEXT
+from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, TEXT, BOOLEAN
 
 Base = declarative_base()
 
@@ -49,6 +49,8 @@ class User_Server(Base):
     server_id = Column(Integer, ForeignKey("discord_server.id"), primary_key=True)
     server_profile_name = Column(TEXT)
     collection_name = Column(TEXT)
+    rolls = Column(Integer)
+    can_claim = Column(BOOLEAN)
 
     user = relationship("User", backref="user_server")
     server = relationship("Server", backref="user_server")
