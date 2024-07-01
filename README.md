@@ -11,6 +11,9 @@
 <br/>
 
 BiasBot is a Discord bot where you can compete with others to roll your favorite K-Pop idol!
+<br/>
+<br/>
+**Note:** My commit history is super messy don't mind it
 
 ## Features
 
