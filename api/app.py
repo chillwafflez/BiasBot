@@ -8,6 +8,7 @@ app = Flask(__name__)
 @app.route("/", methods=['GET'])
 def home():
     return Response("bias bot home", 200)
+    return Response("bias bot home", 200)
 
 app.register_blueprint(idol_api)
 app.register_blueprint(user_api)

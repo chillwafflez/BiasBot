@@ -90,10 +90,12 @@ def scrape_images_to_csv(input_path, output_path):
                     break
 
             # if counter == 3:
+            # if counter == 3:
             #     break
             # counter += 1
             df.loc[i, 'First_Picture_URL'] = img_src.strip()
         except:
+            # if counter == 3:
             # if counter == 3:
             #     break
             # counter += 1
