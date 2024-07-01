@@ -245,6 +245,16 @@ async def userID(ctx):
     user_nickname = ctx.message.author.nick
     await ctx.send(f"User name: {user_name} | User ID: {user_id} | Server nickname: {user_nickname}")
 
+@bot.command()
+async def test(ctx):
+    # get random idol 
+    idol_picture_url = "https://bias-bot-images.s3.us-west-1.amazonaws.com/" + "male_idols/Dowoon_YoonDowoon.jpeg"
+
+    embed = discord.Embed(
+        color=discord.Color.pink(),
+    )
+    embed.set_image(url=idol_picture_url) 
+    await ctx.send(embed=embed)
 
 def add_claimed(user_id, username, server_id, idol_id):
 

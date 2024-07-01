@@ -13,6 +13,7 @@ import pandas as pd
 import boto3
 import os
 from urllib.parse import quote
+import mimetypes
 load_dotenv()
 
 # Scrapes all idols from kdb.com
@@ -162,15 +163,15 @@ def upload_to_s3(input_csv, output_csv):
     df = pd.read_csv(input_csv)
     df = df.fillna('')
     for i in df.index:
-        if i < 800:
+        if i < 400:
             continue
 
-        # if i == 800:
-        #     print(f"\nSTOPPED AT LINE {i + 1}")
-        #     stage_name = df.iloc[i]['Stage_Name']
-        #     full_name = df.iloc[i]['Full_Name']
-        #     print(f"For next run start with: {full_name} ({stage_name})")
-        #     break
+        if i == 800:
+            print(f"\nSTOPPED AT LINE {i + 1}")
+            stage_name = df.iloc[i]['Stage_Name']
+            full_name = df.iloc[i]['Full_Name']
+            print(f"For next run start with: {full_name} ({stage_name})")
+            break
 
         stage_name = df.iloc[i]['Stage_Name'] if df.iloc[i]['Stage_Name'] else ""
         full_name = df.iloc[i]['Full_Name'] if df.iloc[i]['Full_Name'] else ""
@@ -183,7 +184,8 @@ def upload_to_s3(input_csv, output_csv):
 
         temp_stage_name = stage_name.replace(" ", "")
         temp_full_name = full_name.replace(" ", "") if full_name else ""
-        filename = "male_idols/" + temp_stage_name + '_' + temp_full_name
+        # filename = "male_idols/" + temp_stage_name + '_' + temp_full_name
+        filename = "male_idolsV2/" + temp_stage_name + '_' + temp_full_name
 
         if ".png" in pic_url:
             filename += ".png"
@@ -197,12 +199,18 @@ def upload_to_s3(input_csv, output_csv):
             filename += ".jpeg"
         print(f"File save name: {filename}")
 
+       # get correct MIME type
+        content_type, _ = mimetypes.guess_type(filename)
+        if not content_type:
+            content_type = 'binary/octet-stream'
+
     # ---- USING PUT_OBJECT ----
         try: 
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
             image = requests.get(pic_url, headers=headers)
             if image.status_code == 200:
-                s3.put_object(Bucket='bias-bot-images', Key=filename, Body=image.content)
+                # s3.put_object(Bucket='bias-bot-images', Key=filename, Body=image.content)
+                s3.put_object(Bucket='bias-bot-images', Key=filename, Body=image.content, ContentType=content_type)     # setting content type to not binary/octet-stream
                 print(f"Uploaded {filename} to S3 bucket")
                 with open(output_csv, mode='a', newline='', encoding="utf-8") as f:
                     writer = csv.writer(f)
@@ -214,6 +222,9 @@ def upload_to_s3(input_csv, output_csv):
                     writer.writerow([stage_name, full_name, korean_name, group, country, "ERROR"])
         except Exception as e:
             print(f"Error uploading {filename} to S3 bucket | Exception: {e}")
+            with open(output_csv, mode='a', newline='', encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow([stage_name, full_name, korean_name, group, country, "ERROR"])
         print()
 
     # ---- USING PUT_OBJECT ----
@@ -283,8 +294,8 @@ def main():
 
 # --- Saving images to s3 --- #
     input_csv = "data\male_idols_with_pics.csv"
-    output_csv = "data\male_idol_filenames.csv"
-    # upload_to_s3(input_csv, output_csv)
+    output_csv = "data\male_idol_filenamesV2.csv"
+    upload_to_s3(input_csv, output_csv)
 
 # --- Downloading images to local storage --- #
     # input_csv = "data\\female_idols_with_pics.csv"
