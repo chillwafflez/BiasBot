@@ -20,6 +20,9 @@ BiasBot is a Discord bot where you can compete with others to roll your favorite
 
 ## Example
 <p align="center">
-      <img src="https://github.com/chillwafflez/BiasBot/assets/98506939/2c95ce30-70da-489b-b2e2-49cbb213ac47"align="left">
-      <img src="https://github.com/chillwafflez/BiasBot/assets/98506939/01b624c4-c779-4dae-9dd6-cf9519c5ceb6" align="right">
+  <img alt="Light" src="https://github.com/chillwafflez/BiasBot/assets/98506939/2c95ce30-70da-489b-b2e2-49cbb213ac47" width="45%">
+&nbsp; &nbsp; &nbsp; &nbsp;
+  <img alt="Dark" src="https://github.com/chillwafflez/BiasBot/assets/98506939/01b624c4-c779-4dae-9dd6-cf9519c5ceb6" width="45%">
 </p>
+
+
