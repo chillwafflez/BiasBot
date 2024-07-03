@@ -28,13 +28,13 @@ BiasBot is a Discord bot where you can compete with others to roll your favorite
   <img alt="Dark" src="https://github.com/chillwafflez/BiasBot/assets/98506939/01b624c4-c779-4dae-9dd6-cf9519c5ceb6" width="45%">
 </p>
 
-## Technologies
-- **Python**
-- **Flask**
-- **SQLAlchemy**
-- **Discord.py** 
-- **BeautifulSoup** 
-- **Selenium** 
-- **PostgreSQL (AWS RDS)**
-- **Amazon S3**
+### Technologies
+- Python
+- Flask
+- SQLAlchemy
+- Discord.py 
+- BeautifulSoup 
+- Selenium
+- PostgreSQL (AWS RDS)
+- Amazon S3
 
