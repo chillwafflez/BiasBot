@@ -1,5 +1,5 @@
 from flask import jsonify, Blueprint, request
-from models.Classes import Idol, Idol_Server, User_Server, User
+from models import Idol, Idol_Server, User_Server, User
 from db import session
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
