@@ -1,5 +1,5 @@
 from flask import jsonify, Blueprint, request
-from models.Classes import Server
+from models import Server
 from db import session
 
 server_api = Blueprint('server_api', __name__)

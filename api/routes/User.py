@@ -1,6 +1,6 @@
 from flask import request, jsonify, Blueprint
 from sqlalchemy.exc import SQLAlchemyError
-from models.Classes import User_Server, Idol_Server, Idol, User
+from models import User_Server, Idol_Server, Idol, User
 from db import session
 
 user_api = Blueprint('user_api', __name__)
